@@ -1,0 +1,41 @@
+#include"q.h"
+#include<pthread.h>
+#include<stdio.h>
+#include<stdlib.h>
+#define SIZE 8192
+
+extern TCB_t * Q;
+TCB_t *Curr_Thread = '\0';    
+static int count = 0;
+
+void start_thread(void (*function)(void))
+{
+    char *stack = (char *) malloc(SIZE*sizeof(char));
+    TCB_t *tcb = (TCB_t *) malloc(sizeof(TCB_t));
+    init_TCB(tcb, function, (void *) stack, SIZE);
+    count++;
+    AddQueue(Q,tcb);
+}
+
+
+void run()
+{
+    ucontext_t parent;     
+    getcontext(&parent);   
+    swapcontext(&parent, (Q->next->context));
+    
+}
+
+
+void yield() // similar to run
+{
+	ucontext_t* parent;     // get a place to store the main context, for faking
+	parent = (ucontext_t *)malloc(sizeof(ucontext_t));
+	getcontext(parent);   // magic sauce
+	Q->next->context = parent;
+	RotateQ(Q);
+	swapcontext(parent, (Q->next->context));
+
+
+
+}
